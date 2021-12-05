@@ -1,0 +1,45 @@
+trigger: none
+
+parameters:
+  - name: amountJobs
+    displayName: The amount of jobs to queue.
+    type: number
+    default: 1
+  - name: waitTime
+    displayName: The amount of seconds to keep the agent busy (at least)
+    type: number
+    default: 10
+  - name: useMSPool
+    displayName: Use Microsoft Hosted agent pool
+    default: false
+    values:
+      - true
+      - false
+  - name: poolName
+    displayName: Name of self-hosted agent pool to use. (ignored for Microsoft-hosted pool)
+    type: string
+    default: Default
+  - name: poolImage
+    displayName: Name of VM image to use in hosted pool. (ignored for self-hosted pool)
+    type: string
+    default: ubuntu-latest
+
+jobs:
+  - job: customer
+    displayName: Customer
+    pool:
+      ${{ if eq(parameters.useMSPool, true) }}:
+        vmImage: ${{ parameters.poolImage }}
+      ${{ else }}:
+        name: ${{ parameters.poolName }}
+    strategy: 
+      parallel: ${{ parameters.amountJobs }}
+    steps:
+    - checkout: none
+    - script: |
+        echo "Start waiting: $(date)"
+        sleep $TIME
+        echo "Finish waiting: $(date)"
+      displayName: Wait
+      env: 
+        TIME: ${{ parameters.waitTime }}
